@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iTrac — Partial Download for Offline · Interactive Mockup</title>
+  <style>
+    /* ── Reset ───────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      color: #1e293b;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Page banner ─────────────────────────── */
+    .page-banner {
+      background: #1a2744;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .banner-eyebrow {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 3px;
+    }
+    .banner-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .banner-pills { display: flex; gap: 7px; flex-wrap: wrap; }
+    .b-pill {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.75);
+      background: rgba(255,255,255,0.08);
+    }
+    .b-pill-blue { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+
+    /* ── Instructions bar ────────────────────── */
+    .inst-bar {
+      background: #eff6ff;
+      border-bottom: 1px solid rgba(59,130,246,0.22);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .inst-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #2563eb;
+      margin-right: 4px;
+      white-space: nowrap;
+    }
+    .inst-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #2563eb;
+      white-space: nowrap;
+    }
+    .inst-num {
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .inst-sep { color: #93c5fd; font-size: 14px; }
+
+    /* ── Main: the iTrac app ─────────────────── */
+    #app {
+      flex: 1;
+      position: relative;
+    }
+
+    /* ── iTrac nav header ────────────────────── */
+    #app .nav {
+      background: #1a2744;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      height: 46px;
+    }
+    #app .nav-l { display: flex; align-items: center; gap: 10px; }
+    #app .nav-grid { display: grid; grid-template-columns: repeat(3,4px); gap: 2.5px; cursor: pointer; }
+    #app .nav-grid span { width:4px;height:4px;background:rgba(255,255,255,0.45);border-radius:1px;display:block; }
+    #app .logo { font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.02em; }
+    #app .logo span { color:#60a5fa; }
+    #app .nav-r { display:flex;align-items:center;gap:14px; }
+    #app .nav-link { color:rgba(255,255,255,0.85);font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px; }
+    #app .nav-lang { color:rgba(255,255,255,0.85);font-size:12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);padding:3px 8px 3px 10px;border-radius:4px;cursor:pointer; }
+    #app .nav-av { width:28px;height:28px;border-radius:50%;background:#7c3aed;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    #app .nav-name { color:rgba(255,255,255,0.85);font-size:12px;white-space:nowrap; }
+
+    /* ── Project page ────────────────────────── */
+    #app .pg { padding: 18px 20px 32px; background: #f0f2f5; min-height: calc(100vh - 46px - 65px - 42px); }
+
+    #app .breadcrumb { font-size:12px;color:#64748b;margin-bottom:12px; }
+    #app .breadcrumb a { color:#2563eb;cursor:pointer;text-decoration:none; }
+    #app .breadcrumb a:hover { text-decoration:underline; }
+
+    #app .proj-hd {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    #app .proj-name-row { display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px; }
+    #app .proj-name { font-size:17px;font-weight:600; }
+    #app .offline-bdg {
+      display:inline-flex;align-items:center;gap:4px;
+      font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;
+      background:#fffbeb;color:#92400e;border:1px solid #fde68a;
+    }
+    #app .offline-bdg.full { background:#f0fdf4;color:#16a34a;border-color:#bbf7d0; }
+    #app .proj-meta { font-size:12px;color:#64748b;display:flex;gap:14px;flex-wrap:wrap; }
+    #app .proj-meta span { display:flex;align-items:center;gap:4px; }
+    #app .st { width:7px;height:7px;border-radius:50%;display:inline-block; }
+    #app .st-g { background:#22c55e; }
+    #app .st-gr { background:#94a3b8; }
+    #app .proj-actions { display:flex;align-items:center;gap:8px;flex-shrink:0; }
+    #app .btn-sec {
+      display:flex;align-items:center;gap:5px;padding:7px 12px;
+      border:1px solid #e2e8f0;border-radius:5px;background:#fff;
+      color:#64748b;font-size:12.5px;cursor:pointer;white-space:nowrap;
+      font-family:inherit;
+    }
+    #app .btn-offline {
+      display:flex;align-items:center;gap:5px;padding:8px 15px;
+      border:none;border-radius:5px;background:#1e293b;
+      color:#fff;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;
+      font-family:inherit;
+      transition: background 0.1s;
+    }
+    #app .btn-offline:hover { background:#0f172a; }
+
+    #app .tabs { display:flex;gap:0;border-bottom:1px solid #e2e8f0;margin-bottom:14px; }
+    #app .tab {
+      padding:9px 16px;font-size:13px;color:#64748b;cursor:pointer;
+      border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;
+    }
+    #app .tab.on { color:#2563eb;border-bottom-color:#2563eb;font-weight:500; }
+
+    #app .dev-card {
+      background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;
+    }
+    #app .dev-card-hd {
+      padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#f8fafc;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    #app .dev-card-title { font-size:12px;font-weight:600;color:#64748b; }
+    #app .dev-count { font-size:11px;color:#64748b;background:#e2e8f0;padding:1px 7px;border-radius:20px; }
+
+    #app table { width:100%;border-collapse:collapse;font-size:12.5px; }
+    #app thead th {
+      text-align:left;padding:8px 12px;background:#f8fafc;
+      border-bottom:1px solid #e2e8f0;color:#64748b;font-weight:500;white-space:nowrap;
+      font-size:12px;
+    }
+    #app tbody td { padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle; }
+    #app tbody tr:last-child td { border-bottom:none; }
+    #app tbody tr:hover td { background:#f8fafc; }
+    #app .grp-t { font-size:11px;font-family:monospace;background:#f1f5f9;padding:1px 6px;border-radius:3px;color:#64748b;white-space:nowrap; }
+    #app .lnk { color:#2563eb;cursor:pointer; }
+    #app .lnk:hover { text-decoration:underline; }
+    #app .prog-w { display:flex;align-items:center;gap:7px; }
+    #app .prog-t { width:50px;height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden; }
+    #app .prog-f { height:100%;background:#22c55e;border-radius:3px; }
+
+    /* ── Modal overlay (fixed for standalone) ── */
+    #modal-ov {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,27,54,0.68);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 999;
+    }
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+    .m-hd {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .m-title { font-size:16px;font-weight:600;margin-bottom:2px; }
+    .m-sub { font-size:12px;color:#64748b; }
+    .m-close {
+      background:none;border:none;cursor:pointer;color:#64748b;font-size:19px;
+      line-height:1;padding:2px 4px;border-radius:4px;flex-shrink:0;margin-left:8px;
+      font-family:inherit;
+    }
+    .m-close:hover { background:#f1f5f9;color:#1e293b; }
+    .m-bd { padding:18px 20px;flex:1;overflow-y:auto; }
+    .m-ft {
+      padding:12px 20px;border-top:1px solid #e2e8f0;
+      display:flex;align-items:center;justify-content:flex-end;
+      gap:8px;flex-shrink:0;
+    }
+    .m-ft-l { margin-right:auto; }
+
+    /* ── Buttons in modal ────────────────────── */
+    .btn-p {
+      padding:8px 18px;border-radius:5px;border:none;
+      background:#3b82f6;color:#fff;font-size:13px;font-weight:500;cursor:pointer;
+      white-space:nowrap;font-family:inherit;
+      transition: background 0.1s;
+    }
+    .btn-p:hover:not(:disabled) { background:#2563eb; }
+    .btn-p:disabled { opacity:0.4;cursor:not-allowed; }
+    .btn-g {
+      padding:8px 14px;border-radius:5px;border:1px solid #e2e8f0;background:#fff;
+      color:#64748b;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit;
+    }
+    .btn-g:hover { background:#f8fafc;color:#1e293b; }
+    .btn-back {
+      padding:8px 12px;border-radius:5px;border:none;background:transparent;
+      color:#64748b;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;
+      font-family:inherit;
+    }
+    .btn-back:hover { color:#1e293b; }
+    .btn-dl {
+      padding:8px 18px;border-radius:5px;border:none;
+      background:#16a34a;color:#fff;font-size:13px;font-weight:500;cursor:pointer;
+      display:flex;align-items:center;gap:5px;white-space:nowrap;font-family:inherit;
+      transition: background 0.1s;
+    }
+    .btn-dl:hover { background:#15803d; }
+
+    /* ── Step 1: Radio options ───────────────── */
+    .choose-lbl { font-size:13px;color:#64748b;margin-bottom:12px; }
+    .r-opt {
+      display:flex;align-items:flex-start;gap:13px;padding:13px 15px;
+      border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;margin-bottom:10px;
+      transition: border-color 0.1s, background 0.1s;
+    }
+    .r-opt:last-child { margin-bottom:0; }
+    .r-opt.on { border-color:#3b82f6;background:#eff6ff; }
+    .r-opt input { margin-top:3px;flex-shrink:0;cursor:pointer;width:15px;height:15px; }
+    .r-opt-t { font-weight:500;font-size:14px;color:#1e293b;margin-bottom:3px; }
+    .r-opt-s { font-size:12px;color:#64748b;line-height:1.5; }
+    .new-b { font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:3px;background:#3b82f6;color:#fff;letter-spacing:0.05em;vertical-align:middle;margin-left:4px; }
+
+    /* ── Step 2: Device selection ────────────── */
+    .cnt-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;flex-wrap:wrap;gap:4px; }
+    .cnt-txt { font-size:13px;font-weight:500; }
+    .persist-note { font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px; }
+
+    .s-wrap { display:flex;align-items:center;border:1px solid #e2e8f0;border-radius:5px;overflow:hidden;background:#fff;margin-bottom:10px; }
+    .s-wrap:focus-within { border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.14); }
+    .s-ico { padding:0 8px;color:#94a3b8;display:flex;align-items:center;flex-shrink:0; }
+    .s-in { flex:1;padding:9px 8px 9px 0;border:none;outline:none;font-size:13px;color:#1e293b;background:transparent;font-family:inherit; }
+    .s-in::placeholder { color:#94a3b8; }
+
+    .dev-list { border:1px solid #e2e8f0;border-radius:7px;overflow:hidden;max-height:260px;overflow-y:auto; }
+    .dev-item {
+      display:flex;align-items:center;gap:11px;padding:10px 13px;
+      border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background 0.08s;
+    }
+    .dev-item:last-child { border-bottom:none; }
+    .dev-item:hover { background:#f8fafc; }
+    .dev-item.on { background:#eff6ff; }
+    .dev-item input[type="checkbox"] { margin:0;cursor:pointer;width:15px;height:15px;flex-shrink:0; }
+    .dev-grp { font-size:11px;font-family:'Courier New',monospace;background:#f1f5f9;padding:1px 6px;border-radius:3px;color:#64748b;white-space:nowrap;flex-shrink:0; }
+    .dev-nm { font-size:13px;color:#1e293b; }
+    .dev-empty { padding:24px;text-align:center;color:#94a3b8;font-size:13px; }
+
+    /* ── Step 3: Summary ─────────────────────── */
+    .sum-note { font-size:12.5px;color:#64748b;margin-bottom:11px;line-height:1.55; }
+    .sum-list { border:1px solid #e2e8f0;border-radius:7px;overflow:hidden;margin-bottom:12px; }
+    .sum-item { display:flex;align-items:center;gap:10px;padding:10px 13px;border-bottom:1px solid #f1f5f9; }
+    .sum-item:last-child { border-bottom:none; }
+    .sum-num { width:20px;height:20px;border-radius:50%;background:#eff6ff;color:#3b82f6;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .warn-box { background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:9px 13px;font-size:12.5px;color:#92400e;line-height:1.5; }
+
+    /* ── Step 4: Downloading ─────────────────── */
+    .prog-lbl { font-size:13px;color:#64748b;margin-bottom:12px; }
+    .prog-track { height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-bottom:7px; }
+    .prog-fill { height:100%;background:#3b82f6;border-radius:4px;width:0%;transition:width 0.3s ease; }
+    .prog-pct { font-size:12px;color:#64748b;text-align:right; }
+    .done-box { text-align:center;padding:20px 0 10px; }
+    .done-icon { width:52px;height:52px;border-radius:50%;background:#f0fdf4;color:#16a34a;font-size:24px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px; }
+    .done-title { font-size:16px;font-weight:600;margin-bottom:6px; }
+    .done-sub { font-size:13px;color:#64748b;margin-bottom:14px;line-height:1.55; }
+    .done-pill { display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12px;font-weight:600; }
+    .done-pill.full { background:#f0fdf4;border-color:#bbf7d0;color:#16a34a; }
+
+    /* ── Page footer ─────────────────────────── */
+    .page-footer {
+      background: #1a2744;
+      padding: 10px 24px;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      flex-shrink: 0;
+    }
+
+    /* ── Utility ─────────────────────────────── */
+    .hidden { display: none !important; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .prog-fill { transition: none; }
+      #app .btn-offline, .btn-g, .r-opt { transition: none; }
+    }
+
+    /* ── Mobile tweaks ───────────────────────── */
+    @media (max-width: 540px) {
+      .page-banner { padding: 12px 16px; }
+      .inst-bar { padding: 9px 16px; gap: 6px; }
+      .inst-step span:not(.inst-num) { display: none; }
+      #app .pg { padding: 12px 14px 24px; }
+      #app .nav-name { display: none; }
+      #app .nav-link { display: none; }
+      .modal { max-height: 85vh; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── PAGE BANNER ──────────────────────────── -->
+  <div class="page-banner">
+    <div>
+      <div class="banner-eyebrow">iTrac · Interactive Mockup</div>
+      <div class="banner-title">Partial Download for Offline — Feature Walkthrough</div>
+    </div>
+    <div class="banner-pills">
+      <span class="b-pill">Status: Idea</span>
+      <span class="b-pill">Alpha</span>
+      <span class="b-pill b-pill-blue">New Feature</span>
+    </div>
+  </div>
+
+  <!-- ── INSTRUCTIONS ──────────────────────────── -->
+  <div class="inst-bar" role="note" aria-label="How to use this mockup">
+    <span class="inst-label">How to use:</span>
+    <div class="inst-step"><span class="inst-num">1</span>Click "Take Offline"</div>
+    <span class="inst-sep">›</span>
+    <div class="inst-step"><span class="inst-num">2</span>Choose "Select specific devices"</div>
+    <span class="inst-sep">›</span>
+    <div class="inst-step"><span class="inst-num">3</span>Search &amp; tick devices</div>
+    <span class="inst-sep">›</span>
+    <div class="inst-step"><span class="inst-num">4</span>Proceed → Review → Download</div>
+  </div>
+
+  <!-- ── MAIN APP ──────────────────────────────── -->
+  <div id="app">
+
+    <!-- iTrac nav -->
+    <div class="nav" role="banner">
+      <div class="nav-l">
+        <div class="nav-grid" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+        <span class="logo">i<span>trac</span></span>
+      </div>
+      <div class="nav-r">
+        <span class="nav-link">Help &amp; Resources</span>
+        <span class="nav-lang">English ▾</span>
+        <div class="nav-av" aria-hidden="true">MG</div>
+        <span class="nav-name">Moiranthem Gyachandra Singh</span>
+      </div>
+    </div>
+
+    <!-- Project page -->
+    <div class="pg">
+      <div class="breadcrumb">
+        <a href="#">Projects</a> / Chicago Office — HVAC Commissioning
+      </div>
+
+      <!-- Project card -->
+      <div class="proj-hd">
+        <div>
+          <div class="proj-name-row">
+            <span class="proj-name">Chicago Office — HVAC Commissioning</span>
+            <span id="offline-bdg" class="offline-bdg hidden" aria-live="polite">PARTIAL ↓</span>
+          </div>
+          <div class="proj-meta">
+            <span>PRJ100019</span>
+            <span>42 Devices</span>
+            <span><span class="st st-g"></span>In Progress</span>
+            <span>61% complete</span>
+          </div>
+        </div>
+        <div class="proj-actions">
+          <button class="btn-sec" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+          </button>
+          <button class="btn-sec" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.37"/></svg>
+            Sync
+          </button>
+          <button class="btn-offline" type="button" id="app-start" aria-haspopup="dialog">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Take Offline
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" role="tablist">
+        <div class="tab on" role="tab" aria-selected="true">Devices</div>
+        <div class="tab" role="tab" aria-selected="false">Documents</div>
+        <div class="tab" role="tab" aria-selected="false">Reports</div>
+        <div class="tab" role="tab" aria-selected="false">History</div>
+      </div>
+
+      <!-- Device table -->
+      <div class="dev-card">
+        <div class="dev-card-hd">
+          <span class="dev-card-title">ALL DEVICES</span>
+          <span class="dev-count">42 devices</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table aria-label="Project devices">
+            <thead>
+              <tr>
+                <th>Device Name</th>
+                <th>Group ID</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="lnk">Door Controller — Main Entry</span></td>
+                <td><span class="grp-t">SEC-01</span></td>
+                <td style="color:#64748b">Access Control</td>
+                <td><span class="st st-g"></span> Commissioned</td>
+                <td><div class="prog-w"><div class="prog-t"><div class="prog-f" style="width:100%"></div></div><span style="font-size:12px;color:#64748b">100%</span></div></td>
+              </tr>
+              <tr>
+                <td><span class="lnk">Access Reader — Main Entry</span></td>
+                <td><span class="grp-t">SEC-01</span></td>
+                <td style="color:#64748b">Access Control</td>
+                <td><span class="st st-g"></span> Commissioned</td>
+                <td><div class="prog-w"><div class="prog-t"><div class="prog-f" style="width:100%"></div></div><span style="font-size:12px;color:#64748b">100%</span></div></td>
+              </tr>
+              <tr>
+                <td><span class="lnk">Air Handler Unit — Level 2</span></td>
+                <td><span class="grp-t">HVAC-02</span></td>
+                <td style="color:#64748b">HVAC</td>
+                <td><span class="st st-gr"></span> Pending</td>
+                <td><div class="prog-w"><div class="prog-t"><div class="prog-f" style="width:40%"></div></div><span style="font-size:12px;color:#64748b">40%</span></div></td>
+              </tr>
+              <tr>
+                <td><span class="lnk">Security Camera — Parking Lot</span></td>
+                <td><span class="grp-t">SEC-02</span></td>
+                <td style="color:#64748b">Surveillance</td>
+                <td><span class="st st-gr"></span> Pending</td>
+                <td><div class="prog-w"><div class="prog-t"><div class="prog-f" style="width:0%"></div></div><span style="font-size:12px;color:#64748b">0%</span></div></td>
+              </tr>
+              <tr>
+                <td><span class="lnk">Fire Panel — Zone A</span></td>
+                <td><span class="grp-t">FP-01</span></td>
+                <td style="color:#64748b">Fire Safety</td>
+                <td><span class="st st-gr"></span> Pending</td>
+                <td><div class="prog-w"><div class="prog-t"><div class="prog-f" style="width:0%"></div></div><span style="font-size:12px;color:#64748b">0%</span></div></td>
+              </tr>
+              <tr>
+                <td><span class="lnk">Air Handler Unit — Level 1</span></td>
+                <td><span class="grp-t">HVAC-01</span></td>
+                <td style="color:#64748b">HVAC</td>
+                <td><span class="st st-gr"></span> Pending</td>
+                <td><div class="prog-w"><div class="prog-t"><div class="prog-f" style="width:15%"></div></div><span style="font-size:12px;color:#64748b">15%</span></div></td>
+              </tr>
+              <tr>
+                <td><span class="lnk">Elevator Controller — Bank A</span></td>
+                <td><span class="grp-t">EL-01</span></td>
+                <td style="color:#64748b">Elevator</td>
+                <td><span class="st st-gr"></span> Pending</td>
+                <td><div class="prog-w"><div class="prog-t"><div class="prog-f" style="width:0%"></div></div><span style="font-size:12px;color:#64748b">0%</span></div></td>
+              </tr>
+              <tr>
+                <td><span class="lnk">Security Camera — Lobby</span></td>
+                <td><span class="grp-t">SEC-03</span></td>
+                <td style="color:#64748b">Surveillance</td>
+                <td><span class="st st-gr"></span> Pending</td>
+                <td><div class="prog-w"><div class="prog-t"><div class="prog-f" style="width:0%"></div></div><span style="font-size:12px;color:#64748b">0%</span></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MODAL OVERLAY ────────────────────────── -->
+    <div id="modal-ov" class="hidden" role="dialog" aria-modal="true" aria-labelledby="m-title-txt">
+
+      <div class="modal">
+
+        <!-- STEP 1: Choose download type -->
+        <div id="s1">
+          <div class="m-hd">
+            <div>
+              <div class="m-title" id="m-title-txt">Take Project Offline</div>
+              <div class="m-sub">Chicago Office — HVAC Commissioning</div>
+            </div>
+            <button class="m-close do-cancel" type="button" aria-label="Cancel and close">&#x2715;</button>
+          </div>
+          <div class="m-bd">
+            <p class="choose-lbl">How would you like to download this project?</p>
+            <label class="r-opt on" id="opt-whole">
+              <input type="radio" name="dltype" value="whole" checked />
+              <div>
+                <div class="r-opt-t">Download whole project</div>
+                <div class="r-opt-s">All 42 devices and their data will be downloaded and available offline</div>
+              </div>
+            </label>
+            <label class="r-opt" id="opt-partial">
+              <input type="radio" name="dltype" value="partial" />
+              <div>
+                <div class="r-opt-t">Select specific devices <span class="new-b">NEW</span></div>
+                <div class="r-opt-s">Choose which devices to download — only those will appear in your offline checklist</div>
+              </div>
+            </label>
+          </div>
+          <div class="m-ft">
+            <button class="btn-g do-cancel" type="button">Cancel</button>
+            <button class="btn-p" id="s1-cont" type="button">Continue</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Select devices -->
+        <div id="s2" class="hidden">
+          <div class="m-hd">
+            <div>
+              <div class="m-title">Select Devices</div>
+              <div class="m-sub">Step 1 of 2 — tick the devices you need offline</div>
+            </div>
+            <button class="m-close do-cancel" type="button" aria-label="Cancel and close">&#x2715;</button>
+          </div>
+          <div class="m-bd">
+            <div class="cnt-row">
+              <span class="cnt-txt" id="cnt-txt">0 devices selected</span>
+              <span class="persist-note">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Selection saved 24 h if you close
+              </span>
+            </div>
+            <div class="s-wrap">
+              <span class="s-ico" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              </span>
+              <input class="s-in" id="dev-search" placeholder="Search by Group ID or device name…" aria-label="Search devices" />
+            </div>
+            <div class="dev-list" id="dev-list" role="list" aria-label="Device list"></div>
+          </div>
+          <div class="m-ft">
+            <button class="btn-g do-cancel" type="button">Cancel</button>
+            <button class="btn-p" id="s2-proc" type="button" disabled>Proceed</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Confirm selection -->
+        <div id="s3" class="hidden">
+          <div class="m-hd">
+            <div>
+              <div class="m-title" id="s3-title">Confirm Download</div>
+              <div class="m-sub">Step 2 of 2 — review your selection before downloading</div>
+            </div>
+            <button class="m-close do-cancel" type="button" aria-label="Cancel and close">&#x2715;</button>
+          </div>
+          <div class="m-bd">
+            <p class="sum-note">The following devices will be downloaded for offline use. Only these devices will appear in your offline test checklist.</p>
+            <div class="sum-list" id="sum-list" role="list"></div>
+            <div class="warn-box">
+              Devices not listed above will <strong>not</strong> be available offline and will be hidden from your offline checklist.
+            </div>
+          </div>
+          <div class="m-ft">
+            <div class="m-ft-l">
+              <button class="btn-back" id="s3-back" type="button">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                Back
+              </button>
+            </div>
+            <button class="btn-g do-cancel" type="button">Cancel</button>
+            <button class="btn-dl" id="s3-dl" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Downloading / Done -->
+        <div id="s4" class="hidden">
+          <div class="m-hd">
+            <div>
+              <div class="m-title" id="s4-title">Downloading…</div>
+              <div class="m-sub" id="s4-sub">Please wait</div>
+            </div>
+          </div>
+          <div class="m-bd">
+            <div id="s4-loading">
+              <p class="prog-lbl" id="s4-msg">Preparing download…</p>
+              <div class="prog-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="prog-bar">
+                <div class="prog-fill" id="prog-fill"></div>
+              </div>
+              <div class="prog-pct" id="prog-pct">0%</div>
+            </div>
+            <div id="s4-done" class="hidden">
+              <div class="done-box">
+                <div class="done-icon" aria-hidden="true">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="done-title" id="done-title">Download complete</div>
+                <div class="done-sub" id="done-sub">Your selected devices are now available offline.</div>
+                <span class="done-pill" id="done-pill">Partially downloaded</span>
+              </div>
+            </div>
+          </div>
+          <div class="m-ft hidden" id="s4-ft">
+            <button class="btn-p" id="s4-close" type="button">Done</button>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /modal-ov -->
+
+  </div><!-- /app -->
+
+  <!-- ── PAGE FOOTER ───────────────────────────── -->
+  <div class="page-footer">
+    iTrac · Partial Download for Offline · Interactive Mockup · For discussion purposes only
+  </div>
+
+  <script>
+    (function () {
+      var DEVICES = [
+        { id: 1, group: 'SEC-01',  name: 'Door Controller — Main Entry' },
+        { id: 2, group: 'SEC-01',  name: 'Access Reader — Main Entry' },
+        { id: 3, group: 'HVAC-02', name: 'Air Handler Unit — Level 2' },
+        { id: 4, group: 'SEC-02',  name: 'Security Camera — Parking Lot' },
+        { id: 5, group: 'FP-01',   name: 'Fire Panel — Zone A' },
+        { id: 6, group: 'HVAC-01', name: 'Air Handler Unit — Level 1' },
+        { id: 7, group: 'EL-01',   name: 'Elevator Controller — Bank A' },
+        { id: 8, group: 'SEC-03',  name: 'Security Camera — Lobby' }
+      ];
+
+      var selected = new Set();
+      var dlTimer = null;
+      var isFull = false;
+
+      function qs(sel) { return document.querySelector(sel); }
+      function qsa(sel) { return document.querySelectorAll(sel); }
+
+      function showStep(n) {
+        [1, 2, 3, 4].forEach(function (i) {
+          var el = qs('#s' + i);
+          if (el) el.classList.toggle('hidden', i !== n);
+        });
+      }
+
+      function openModal() {
+        selected.clear();
+        qs('#dev-search').value = '';
+        isFull = false;
+        var ov = qs('#modal-ov');
+        ov.classList.remove('hidden');
+        // Reset radio
+        var whole = qs('input[name="dltype"][value="whole"]');
+        whole.checked = true;
+        qs('#opt-whole').classList.add('on');
+        qs('#opt-partial').classList.remove('on');
+        showStep(1);
+        qs('#s1-cont').focus();
+      }
+
+      function closeModal() {
+        if (dlTimer) { clearInterval(dlTimer); dlTimer = null; }
+        qs('#modal-ov').classList.add('hidden');
+        selected.clear();
+      }
+
+      // Open modal
+      qs('#app-start').addEventListener('click', openModal);
+
+      // Cancel buttons
+      qsa('.do-cancel').forEach(function (btn) {
+        btn.addEventListener('click', closeModal);
+      });
+
+      // Step 1: radio toggle
+      qsa('input[name="dltype"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+          qs('#opt-whole').classList.toggle('on', qs('input[name="dltype"][value="whole"]').checked);
+          qs('#opt-partial').classList.toggle('on', qs('input[name="dltype"][value="partial"]').checked);
+        });
+      });
+
+      // Step 1: Continue
+      qs('#s1-cont').addEventListener('click', function () {
+        var choice = qs('input[name="dltype"]:checked');
+        if (!choice) return;
+        isFull = (choice.value === 'whole');
+        if (isFull) {
+          startDownload(42);
+        } else {
+          showStep(2);
+          renderDevices('');
+          updateCount();
+          qs('#dev-search').focus();
+        }
+      });
+
+      // Step 2: Search
+      qs('#dev-search').addEventListener('input', function () {
+        renderDevices(this.value.toLowerCase().trim());
+      });
+
+      function renderDevices(query) {
+        var list = qs('#dev-list');
+        list.innerHTML = '';
+        var matched = DEVICES.filter(function (d) {
+          return !query ||
+            d.name.toLowerCase().indexOf(query) !== -1 ||
+            d.group.toLowerCase().indexOf(query) !== -1;
+        });
+        if (matched.length === 0) {
+          var empty = document.createElement('div');
+          empty.className = 'dev-empty';
+          empty.textContent = 'No devices match "' + query + '"';
+          list.appendChild(empty);
+          return;
+        }
+        matched.forEach(function (d) {
+          var item = document.createElement('div');
+          item.className = 'dev-item' + (selected.has(d.id) ? ' on' : '');
+          item.setAttribute('role', 'listitem');
+
+          var chk = document.createElement('input');
+          chk.type = 'checkbox';
+          chk.checked = selected.has(d.id);
+          chk.setAttribute('aria-label', d.group + ' ' + d.name);
+
+          var grp = document.createElement('span');
+          grp.className = 'dev-grp';
+          grp.textContent = d.group;
+
+          var nm = document.createElement('span');
+          nm.className = 'dev-nm';
+          nm.textContent = d.name;
+
+          item.appendChild(chk);
+          item.appendChild(grp);
+          item.appendChild(nm);
+
+          function toggle(e) {
+            if (e && e.target === chk) return; // handled by change
+            chk.checked = !chk.checked;
+            updateSelected(d.id, chk.checked, item);
+          }
+
+          chk.addEventListener('change', function () {
+            updateSelected(d.id, chk.checked, item);
+          });
+          item.addEventListener('click', toggle);
+
+          list.appendChild(item);
+        });
+      }
+
+      function updateSelected(id, checked, item) {
+        if (checked) { selected.add(id); item.classList.add('on'); }
+        else { selected.delete(id); item.classList.remove('on'); }
+        updateCount();
+      }
+
+      function updateCount() {
+        var n = selected.size;
+        qs('#cnt-txt').textContent = n + ' device' + (n !== 1 ? 's' : '') + ' selected';
+        qs('#s2-proc').disabled = (n === 0);
+      }
+
+      // Step 2: Proceed
+      qs('#s2-proc').addEventListener('click', function () {
+        if (selected.size === 0) return;
+        renderSummary();
+        showStep(3);
+      });
+
+      function renderSummary() {
+        var list = qs('#sum-list');
+        list.innerHTML = '';
+        var items = DEVICES.filter(function (d) { return selected.has(d.id); });
+        qs('#s3-title').textContent = items.length + ' device' + (items.length !== 1 ? 's' : '') + ' selected for download';
+        items.forEach(function (d, i) {
+          var row = document.createElement('div');
+          row.className = 'sum-item';
+          row.setAttribute('role', 'listitem');
+          var num = document.createElement('span');
+          num.className = 'sum-num';
+          num.textContent = i + 1;
+          var grp = document.createElement('span');
+          grp.className = 'dev-grp';
+          grp.textContent = d.group;
+          var nm = document.createElement('span');
+          nm.className = 'dev-nm';
+          nm.textContent = d.name;
+          row.appendChild(num); row.appendChild(grp); row.appendChild(nm);
+          list.appendChild(row);
+        });
+      }
+
+      // Step 3: Back
+      qs('#s3-back').addEventListener('click', function () {
+        showStep(2);
+        renderDevices((qs('#dev-search').value || '').toLowerCase().trim());
+      });
+
+      // Step 3: Download
+      qs('#s3-dl').addEventListener('click', function () {
+        startDownload(selected.size);
+      });
+
+      function startDownload(count) {
+        showStep(4);
+        var label = isFull
+          ? 'Downloading all ' + count + ' devices\u2026'
+          : 'Downloading ' + count + ' device' + (count !== 1 ? 's' : '') + '\u2026';
+        qs('#s4-title').textContent = 'Downloading\u2026';
+        qs('#s4-sub').textContent = label;
+        qs('#s4-msg').textContent = label;
+        qs('#s4-loading').classList.remove('hidden');
+        qs('#s4-done').classList.add('hidden');
+        qs('#s4-ft').classList.add('hidden');
+
+        var fill = qs('#prog-fill');
+        var bar = qs('#prog-bar');
+        var pct = 0;
+        fill.style.width = '0%';
+
+        dlTimer = setInterval(function () {
+          pct += Math.random() * 14 + 7;
+          if (pct >= 100) {
+            pct = 100;
+            clearInterval(dlTimer); dlTimer = null;
+            fill.style.width = '100%';
+            bar.setAttribute('aria-valuenow', '100');
+            qs('#prog-pct').textContent = '100%';
+            setTimeout(function () {
+              qs('#s4-loading').classList.add('hidden');
+              qs('#s4-title').textContent = 'Download complete';
+              qs('#s4-sub').textContent = '';
+              if (isFull) {
+                qs('#done-title').textContent = 'All ' + count + ' devices downloaded';
+                qs('#done-sub').textContent = 'The full project is now available offline. All devices will appear in your checklist.';
+                qs('#done-pill').textContent = 'Fully downloaded';
+                qs('#done-pill').className = 'done-pill full';
+              } else {
+                qs('#done-title').textContent = count + ' device' + (count !== 1 ? 's' : '') + ' downloaded';
+                qs('#done-sub').textContent = 'Your selected devices are now available offline. Only these devices will appear in your offline test checklist.';
+                qs('#done-pill').textContent = 'Partially downloaded';
+                qs('#done-pill').className = 'done-pill';
+              }
+              qs('#s4-done').classList.remove('hidden');
+              qs('#s4-ft').classList.remove('hidden');
+              qs('#s4-close').focus();
+            }, 450);
+            return;
+          }
+          var v = Math.round(pct);
+          fill.style.width = v + '%';
+          bar.setAttribute('aria-valuenow', v);
+          qs('#prog-pct').textContent = v + '%';
+        }, 260);
+      }
+
+      // Step 4: Done — close and update badge
+      qs('#s4-close').addEventListener('click', function () {
+        var full = qs('#done-pill').className.indexOf('full') !== -1;
+        closeModal();
+        var bdg = qs('#offline-bdg');
+        bdg.classList.remove('hidden');
+        if (full) {
+          bdg.textContent = 'FULL \u2193';
+          bdg.className = 'offline-bdg full';
+        } else {
+          bdg.textContent = 'PARTIAL \u2193';
+          bdg.className = 'offline-bdg';
+        }
+      });
+
+      // Close modal on overlay click (outside modal card)
+      qs('#modal-ov').addEventListener('click', function (e) {
+        if (e.target === qs('#modal-ov')) closeModal();
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !qs('#modal-ov').classList.contains('hidden')) {
+          closeModal();
+        }
+      });
+
+    })();
+  </script>
+
+</body>
+</html>
